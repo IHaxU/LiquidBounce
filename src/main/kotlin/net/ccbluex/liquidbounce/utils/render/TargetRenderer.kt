@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.registerAsDynamicImageFromClientResources
 import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.lastRenderPos
 import net.ccbluex.liquidbounce.utils.math.interpolate
@@ -354,7 +355,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             if (entity !is LivingEntity) return 0.0
             val box = entity.box
             val entityHeight = box.maxY - box.minY
-            return entity.health / entity.maxHealth * entityHeight
+            return entity.getActualHealth() / entity.maxHealth * entityHeight
         }
     }
 

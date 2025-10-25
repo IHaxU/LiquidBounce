@@ -22,6 +22,7 @@
 package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.common.ShapeFlag
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleScoreboardHealth
 import net.ccbluex.liquidbounce.interfaces.ClientPlayerEntityAddition
 import net.ccbluex.liquidbounce.interfaces.InputAddition
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -538,8 +539,8 @@ fun LivingEntity.getExposureToExplosion(
  * Currently, uses the following sources:
  * 1. Scoreboard
  */
-fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float {
-    if (fromScoreboard) {
+fun LivingEntity.getActualHealth(): Float {
+    if (ModuleScoreboardHealth.enabled) {
         val health = getHealthFromScoreboard()
 
         if (health != null) {

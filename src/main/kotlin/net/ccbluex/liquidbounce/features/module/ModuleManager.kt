@@ -275,6 +275,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleSpammer,
             ModuleAutoAccount,
             ModuleTeams,
+            ModuleScoreboardHealth,
             ModuleElytraSwap,
             ModuleAutoChatGame,
             ModuleReportHelper,

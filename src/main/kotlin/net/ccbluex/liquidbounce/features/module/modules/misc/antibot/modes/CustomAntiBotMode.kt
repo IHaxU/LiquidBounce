@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
+import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.entity.player.PlayerEntity
@@ -314,7 +315,7 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
             !hitSet.contains(suspected.id)
         }),
         ILLEGAL_HEALTH("IllegalHealth", { suspected ->
-            suspected.health > player.maxHealth
+            suspected.getActualHealth() > player.maxHealth
         }),
         SWUNG("Swung", { suspected ->
             !swungSet.contains(suspected.id)

@@ -594,6 +594,7 @@
   "liquidbounce.module.swingFix.description": "對於1.8伺服器修復揮動數據包順序，以防伺服器反作弊過舊。",
   "liquidbounce.module.swordBlock.description": "在使用ViaVersion的伺服器上開啟1.8劍格擋。",
   "liquidbounce.module.teams.description": "防止殺戮光環(或其他模組)攻擊隊友。",
+  "liquidbounce.module.scoreboardHealth.description": "Lets you pick if you want modules to use the player health from the scoreboard or from the entity.",
   "liquidbounce.module.terrainSpeed.description": "允許你在特定方塊上移動的更快。",
   "liquidbounce.module.timer.description": "改變遊戲的速度。",
   "liquidbounce.module.timerRange.description": "當處於敵人範圍內時加速遊戲時間。",

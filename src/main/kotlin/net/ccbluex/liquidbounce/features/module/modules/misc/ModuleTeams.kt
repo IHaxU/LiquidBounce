@@ -10,8 +10,9 @@
  *
  * LiquidBounce is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * See the GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
@@ -35,10 +36,9 @@ import java.awt.Color
 /**
  * Teams module
  *
- * Prevents KillAura from attacking teammates.
+ * Prevents KillAura from attacking teammates and applies team/armor color tags.
  */
 object ModuleTeams : ClientModule("Teams", Category.MISC) {
-
     private val matches by multiEnumChoice("Matches",
         Matches.SCOREBOARD_TEAM,
         Matches.NAME_COLOR
@@ -49,64 +49,64 @@ object ModuleTeams : ClientModule("Teams", Category.MISC) {
     )
 
     @Suppress("unused")
-    val entityTagEvent = handler<TagEntityEvent> {
-        val entity = it.entity
+    val entityTagEvent = handler<TagEntityEvent> { event ->
+        val entity = event.entity
 
-        if (entity is LivingEntity && isInClientPlayersTeam(entity)) {
-            it.dontTarget()
+        val (color, isTeammate) = getEntityColorAndRelation(entity)
+
+        if (color != null) {
+            event.color(color, Priority.IMPORTANT_FOR_USAGE_1)
         }
 
-        getTeamColor(entity)?.let { color ->
-            it.color(color, Priority.IMPORTANT_FOR_USAGE_1)
+        if (isTeammate) {
+            event.dontTarget()
         }
     }
 
     /**
-     * Check if [entity] is in your own team using scoreboard,
-     * name color, armor color or team prefix.
+     * Returns a pair (Color4b?, isTeammate)
+     * - Uses team color if available.
+     * - Falls back to armor color (or name color) if team color not visible.
      */
-    private fun isInClientPlayersTeam(entity: LivingEntity) =
-        matches.any { it.testMatches(entity) } || checkArmor(entity)
+    private fun getEntityColorAndRelation(entity: Entity): Pair<Color4b?, Boolean> {
+        if (entity !is LivingEntity) {
+            return null to false
+        }
 
-    /**
-     * Checks if the color of any armor piece matches.
-     */
-    private fun checkArmor(entity: LivingEntity) =
-        entity is PlayerEntity && armorColor.any { it.matchesArmorColor(entity) }
+        val isTeammate =
+            matches.any { it.testMatches(entity) } ||
+                (entity is PlayerEntity && armorColor.any { it.matchesArmorColor(entity) })
 
-    /**
-     * Returns the team color of the [entity] or null if the entity is not in a team.
-     */
-    private fun getTeamColor(entity: Entity)
-        = entity.displayName?.style?.color?.rgb?.let { Color4b(Color(it)) }
+        val teamColor = entity.displayName?.style?.color?.rgb?.let { Color4b(Color(it)) }
+
+        val fallbackColor =
+            when (entity) {
+                is PlayerEntity -> armorColor.firstNotNullOfOrNull { part ->
+                    entity.inventory.getArmorStack(part.slot).getArmorColor()
+                        ?.let { Color4b(Color(it)) }
+                }
+                else -> null
+            } ?: teamColor
+
+        return fallbackColor to isTeammate
+    }
 
     @Suppress("unused")
     private enum class Matches(
         override val choiceName: String,
         val testMatches: (suspected: LivingEntity) -> Boolean
     ) : NamedChoice {
-        /**
-         * Check if [LivingEntity] is in your own team using scoreboard,
-         */
         SCOREBOARD_TEAM("ScoreboardTeam", { suspected ->
             player.isTeammate(suspected)
         }),
 
-        /**
-         * Checks if both names have the same color.
-         */
         NAME_COLOR("NameColor", { suspected ->
             val targetColor = player.displayName?.style?.color
             val clientColor = suspected.displayName?.style?.color
 
-            targetColor != null
-                && clientColor != null
-                && targetColor == clientColor
+            targetColor != null && clientColor != null && targetColor == clientColor
         }),
 
-        /**
-         * Prefix check - this works on Hypixel BedWars, GommeHD Skywars and many other servers.
-         */
         PREFIX("Prefix", { suspected ->
             val targetSplit = suspected.displayName
                 ?.string
@@ -118,11 +118,11 @@ object ModuleTeams : ClientModule("Teams", Category.MISC) {
                 ?.stripMinecraftColorCodes()
                 ?.split(" ")
 
-            targetSplit != null
-                && clientSplit != null
-                && targetSplit.size > 1
-                && clientSplit.size > 1
-                && targetSplit[0] == clientSplit[0]
+            targetSplit != null &&
+                clientSplit != null &&
+                targetSplit.size > 1 &&
+                clientSplit.size > 1 &&
+                targetSplit[0] == clientSplit[0]
         })
     }
 
@@ -136,20 +136,9 @@ object ModuleTeams : ClientModule("Teams", Category.MISC) {
         PANTS("Pants", 1),
         BOOTS("Boots", 0);
 
-        /**
-         * Checks if the color of the item in the [slot] of
-         * the [player] matches the user's armor color in the same slot.
-         */
-        @Suppress("ReturnCount")
         fun matchesArmorColor(suspected: PlayerEntity): Boolean {
-            val ownStack = player.inventory.getArmorStack(slot)
-            val otherStack = suspected.inventory.getArmorStack(slot)
-
-            // returns false if the armor is not dyeable (e.g., iron armor)
-            // to avoid a false positive from `null == null`
-            val ownColor = ownStack.getArmorColor() ?: return false
-            val otherColor = otherStack.getArmorColor() ?: return false
-
+            val ownColor = player.inventory.getArmorStack(slot).getArmorColor() ?: return false
+            val otherColor = suspected.inventory.getArmorStack(slot).getArmorColor() ?: return false
             return ownColor == otherColor
         }
     }
